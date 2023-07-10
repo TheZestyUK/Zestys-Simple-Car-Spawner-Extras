@@ -1,0 +1,71 @@
+--ZestyUK Simple car Spawner - Repair - Engine Control
+
+-- Command to spawn a vehicle
+RegisterCommand('spawnvehicle', function(source, args)
+    -- Check if the player has provided a vehicle model name
+    if #args ~= 1 then
+        print('Usage: /spawnvehicle [model]')
+        return
+    end
+
+    -- Get the player's coordinates
+    local playerPed = GetPlayerPed(-1)
+    local playerCoords = GetEntityCoords(playerPed)
+
+    -- Get the vehicle model name from the command argument
+    local modelName = args[1]
+
+    -- Request the vehicle model
+    RequestModel(modelName)
+
+    -- Wait until the vehicle model is loaded
+    while not HasModelLoaded(modelName) do
+        Citizen.Wait(0)
+    end
+
+    -- Create the vehicle
+    local vehicle = CreateVehicle(modelName, playerCoords, GetEntityHeading(playerPed), true, false)
+
+    -- Set the vehicle as the player's current vehicle
+    SetPedIntoVehicle(playerPed, vehicle, -1)
+
+    -- Print a message to indicate the vehicle spawn
+    print('Spawned vehicle: ' .. modelName)
+end)
+
+-- Command to toggle the engine on/off for the player's current vehicle
+RegisterCommand('engine', function(source, args)
+    -- Get the player's current vehicle
+    local playerPed = GetPlayerPed(-1)
+    local vehicle = GetVehiclePedIsIn(playerPed, false)
+
+    -- Check if the player is in a vehicle
+    if vehicle ~= 0 then
+        -- Toggle the engine state
+        local engineState = GetIsVehicleEngineRunning(vehicle)
+        SetVehicleEngineOn(vehicle, not engineState, true, true)
+        print('Engine ' .. (not engineState and 'on' or 'off') .. ' for the current vehicle')
+    else
+        print('You are not in a vehicle')
+    end
+end)
+
+-- Command to repair the player's current vehicle
+RegisterCommand('repair', function(source, args)
+    -- Get the player's current vehicle
+    local playerPed = GetPlayerPed(-1)
+    local vehicle = GetVehiclePedIsIn(playerPed, false)
+
+    -- Check if the player is in a vehicle
+    if vehicle ~= 0 then
+        -- Repair the vehicle
+        SetVehicleFixed(vehicle)
+        SetVehicleDeformationFixed(vehicle)
+        SetVehicleUndriveable(vehicle, false)
+        SetVehicleEngineHealth(vehicle, 1000.0)
+        SetVehiclePetrolTankHealth(vehicle, 1000.0)
+        print('Repaired the current vehicle')
+    else
+        print('You are not in a vehicle')
+    end
+end)
